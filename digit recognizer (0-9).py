@@ -53,24 +53,40 @@ while True:
         if np.count_nonzero(canvas) == 0:
             print("Draw something!")
             continue
-        #CROP DIGIT
+            
+        # 1. CROP DIGIT
         coords = cv2.findNonZero(canvas)
         x, y, w, h = cv2.boundingRect(coords)
         digit = canvas[y:y+h, x:x+w]
 
-        #RESIZE TO 28x28
-        digit = cv2.resize(digit, (28, 28))
+        # 2. RESIZE WITH INTER_AREA (Prevents blurring when shrinking)
+        if w > h:
+            new_w = 20
+            new_h = int((20 / w) * h)
+        else:
+            new_h = 20
+            new_w = int((20 / h) * w)
+            
+        digit = cv2.resize(digit, (new_w, new_h), interpolation=cv2.INTER_AREA)
 
-        #INVERT
-        digit = 255 - digit
+        # 3. THRESHOLDING (Forces gray, blurry pixels to become solid white)
+        _, digit = cv2.threshold(digit, 100, 255, cv2.THRESH_BINARY)
 
-        #NORMALIZE
+        # 4. PAD TO 28x28 AND CENTER
+        top = (28 - new_h) // 2
+        bottom = 28 - new_h - top
+        left = (28 - new_w) // 2
+        right = 28 - new_w - left
+        
+        digit = cv2.copyMakeBorder(digit, top, bottom, left, right, cv2.BORDER_CONSTANT, value=0)
+
+        # 5. NORMALIZE
         digit = digit / 255.0
 
-        #RESHAPE
+        # 6. RESHAPE FOR MODEL
         digit = digit.reshape(1, 28, 28)
 
-        #PREDICT
+        # 7. PREDICT
         prediction = np.argmax(model.predict(digit), axis=1)
         print("Predicted:", prediction[0])
 
@@ -80,4 +96,5 @@ while True:
     elif key == ord('q'):
         break
 
+cv2.destroyAllWindows()
 cv2.destroyAllWindows()
