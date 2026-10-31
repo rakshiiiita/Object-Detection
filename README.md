@@ -27,7 +27,8 @@ The repository currently includes a Dog and Cat image detection/classification n
 - Keras
 - OpenCV
 - NumPy
-- Jupyter Notebook
+- Google Colab
+- Visual Studio Code
 
 ---
 
